@@ -45,9 +45,18 @@ def FEEDME():
     # print("routes.py -> FEEDME()")
     #new_csv = main(40.6937957, -73.9858845)
     
-    new_csv="app/feed/Alpha20191120-070314.csv"
-    jayson_file = vodoo(new_csv) # This is literally a year of work in one function call...
+    print("routes.py -> find_restaurant()")
+    #coords = request.arg.to_dict() #?x=100&y=200
+    coords = request.get_json()
+    x = coords['x']
+    y = coords['y']
+    user_id = coords['uid']
+    print("coords:", x, y)
+    new_csv = main(x,y,user_id)
+    ConfigureKey(current_app.config["YELP_API_KEY"])
+    jayson_file = vodoo(new_csv)
     return jsonify(jayson_file)
+    #return "ok",200
       
 @bp.errorhandler(500)
 def server_error(e):

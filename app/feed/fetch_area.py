@@ -208,7 +208,7 @@ def main(x,y,user_id):
 				address = details['address']
 			except KeyError:
 				address = "Earth"
-			frequency = 0
+			frequency = 0 #need to update freq
 			pdata = PlaceData(name, rating_n, opening_hours, distance, price_level,rating,frequency, popular, time_spent, place_id, photo_reference,address)
 			locations.append(pdata)
 	#now sort
