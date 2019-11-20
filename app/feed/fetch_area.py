@@ -5,7 +5,6 @@ import time
 import geopy.distance
 import populartimes
 import time
-from app.feed import bp
 
 class PlaceData(object):
 	"""docstring for PlaceData"""
@@ -36,6 +35,7 @@ class PlaceData(object):
 		# Category History (our database) (use Yelp to get restaurant category)
 		# Popularity
 		print("==================REWIEVS==================")
+ 
 
 class GooglePlaces():
 	#one call does -124
