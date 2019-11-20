@@ -1,5 +1,7 @@
 from app.feed import bp
 from flask import jsonify, request, current_app
+from app.feed.fetch_area import main
+
 
 @bp.route("/try")
 def try_out():
@@ -13,5 +15,8 @@ def find_restaurant():
     print("coords:", x, y)
     return 'success', 200
     
-def perform_something_with_api_key(params):
-     request.get(url, apikey)   
+@bp.route("/try_fetch/", methods=["GET", "POST"])
+def try_fetch():
+    main(40.6937957, -73.9858845)
+    return "success", 200
+      

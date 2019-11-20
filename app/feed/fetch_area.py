@@ -1,10 +1,11 @@
 import requests
 import json
-import sleep
 import csv
 import time
 import geopy.distance
 import populartimes
+import time
+from app.feed import bp
 
 class PlaceData(object):
 	"""docstring for PlaceData"""
@@ -39,7 +40,10 @@ class PlaceData(object):
 class GooglePlaces():
 	#one call does -124
 	def __init__(self,key):
+	    print("fetch_area() -> GooglePlaces()")
+	    print(key)
 		self.apiKey = key
+		
 	def searchL(self, location, types):
 		endpoint_url = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?"
 		params = {'location': location,'types': types, 'radius' : "500" ,'key': self.apiKey}
@@ -50,12 +54,16 @@ class GooglePlaces():
 		#Google returns max of 60.Need more for ML
 		places.extend(results['results'])
 		time.sleep(3)
-		# while "next_page_token" in results:
-		# 	params["pagetoken"] = results["next_page_token"]
-		# 	data = requests.get(endpoint_url, params = params) #JSON request
-		# 	results = json.loads(data.content) #load the data from Json
-		# 	places.extend(results['results'])
-		# 	time.sleep(3)
+		
+		"""
+		while "next_page_token" in results:
+			params["pagetoken"] = results["next_page_token"]
+			data = requests.get(endpoint_url, params = params) #JSON request
+			results = json.loads(data.content) #load the data from Json
+			places.extend(results['results'])
+			time.sleep(3)
+		"""
+			
 		return places
 
 	def Pdetails(self,place_id, fields):
@@ -67,10 +75,12 @@ class GooglePlaces():
 		'key':self.apiKey
 		}
 		data = requests.get(endpoint_url, params = params) #JSON request
+		
 		if(data.status_code==404):
 			return None
 		details = json.loads(data.content) #load the data from Json
 		print(details)
+		
 		return details
 
 def ranking(pdata,rank,day,index): #getting the rnaking
@@ -89,9 +99,11 @@ def ranking(pdata,rank,day,index): #getting the rnaking
 	return final_result
 
 def write(locations): #write the csv
+	timestr = time.strftime("%Y%m%d-%H%M%S")
 	goal = 0
 	cusine = 0
 	fieldnames = ['name','rating_n', 'opening_hours','distance','price_level','rating','frequency','time_spent','Went?']
+	write_file = "Alpha"+timestr+".csv"
 	with open('Alpha.csv', "w") as csvfile:
 		writer = csv.DictWriter(csvfile,fieldnames=fieldnames)
 		rank = 9
@@ -110,17 +122,22 @@ def write(locations): #write the csv
 						print(place.name)
 	print("Done Writing")
 				
-
-
-def main():
+def main(x,y):
+    print("fetch_area() -> main(x, y)")
+    print("x", x)
+    print("y", y)
+    
+    api_key = bp.config["GOOGLE_API_KEY"]
+    
 	locations = []
-	key = "AIzaSyDLtBrh0pIyf75x7DDpZHIkEyEHH4Ng3Gk"
-	Search=GooglePlaces(key)
-	places = Search.searchL("40.6937957,-73.9858845","restaurant")
+	coords = str(x)+','+str(y)
+	
+	Search=GooglePlaces(api_key)
+	
+	places = Search.searchL(coords,"restaurant")
 	fields = ['name', 'user_ratings_total', 'opening_hours', 'price_level', 'rating']
 	for place in places:
-		sleep(3)
-		#print(place['place_id'])
+		print(place['place_id'])
 		details=None
 		#details = Search.Pdetails(place['place_id'], fields)
 		try:
@@ -141,7 +158,7 @@ def main():
 				name = ""
 			try:
 				location = details['coordinates']
-				#print(location)
+				print(location)
 				coord1=(40.6937957,-73.9858845)
 				coord2=(location['lat'],location['lng'])
 				distance = geopy.distance.vincenty(coord1, coord2).m
@@ -178,4 +195,11 @@ def main():
 	#now sort
 	#get top 7 rest
 	write(locations)
+
+"""
+if __name__=="__main__":
+	x = 40.6937957
+	y = -73.9858845
+	main(x,y)
+"""
 
