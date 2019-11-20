@@ -50,18 +50,31 @@ def vodoo(new_csv):
 
     restaurants = json.loads(jayson)
     interface = []
+    decisions= []
 
     for r in restaurants :
 	    addr = restaurants[r]["address"].split(",")
 	    interface.append({
 		    "name": restaurants[r]["name"],
-		    "address": [addr[0], ",".join(addr[1:])]
+		    "address": [addr[0], ",".join(addr[1:])],
+                    "place_id":restaurants[r]["place_id"]
 	    })
+            dic = {
+		    "name": restaurants[r]["name"],
+		    "distance":restaurants[r]["distance"],
+		    "address": [addr[0], ",".join(addr[1:])],
+		    "rating_n":restaurants[r]["rating_n"],
+		    "rating":restaurants[r]["rating"],
+		    "place_id":restaurants[r]["place_id"],
+		    "price":restaurants[r]["price_level"],
+		    "photo":restaurants[r]["photo"],
+		    "score":0
+            }
+            decisions.append(dic)
 
-    #print(CuisineRater("teddy", interface))	
+    #print(CuisineRater("teddy", interface)) Teddy will update the score	
 
-    #print(raw_data.to_json(orient="index"))
-    return jayson
+    return {"status" : "<HTTP_STATUS>", "decisions": decisions}
 
 
 if __name__=="__main__":
