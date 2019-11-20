@@ -2,7 +2,6 @@ import requests
 import json
 import csv
 import time
-import time
 import geopy.distance
 from populartimes import get_id
 import time
@@ -95,10 +94,10 @@ def ranking(pdata,rank,day,index): #getting the rnaking
 		dic = (place_id,value)
 		top.append(dic)
 	results = sorted(top,reverse=True,key=lambda popularity:popularity[1])[0:rank]
-	print(results)
+	#print(results)
 	final_result = []
 	for i in results:
-		print(i)
+		#print(i)
 		final_result.append(i[0])
 	return final_result
 
@@ -123,7 +122,7 @@ def write(locations): #write the csv
 							goal = 1
 						else:
 							goal = 0
-						goal = place.popular[day]['data'][index]
+						#goal = place.popular[day]['data'][index]
 						writer.writerow({'place_id':place.place_id,'name':place.name,'rating_n':place.rating_n,
 						 'opening_hours':place.opening_hours,'distance':place.distance,
 						'price_level':place.price_level,'rating':place.rating,
@@ -137,8 +136,7 @@ def main(x,y):
 	# print("x", x)
 	# print("y", y)
 	
-	api_key = "AIzaSyDLtBrh0pIyf75x7DDpZHIkEyEHH4Ng3Gk"
-
+	api_key = current_app.config["GOOGLE_API_KEY"]
 	
 	locations = []
 	coords = str(x)+','+str(y)
@@ -150,8 +148,9 @@ def main(x,y):
 	for place in places:
 		time.sleep(1)
 		details=None
+		print(place)
 		try:
-			photo_reference = place['photo_reference']
+			photo_reference = place['photos']['photo_reference']
 		except KeyError:
 			photo_reference = "null"
 		try:
@@ -218,10 +217,10 @@ def main(x,y):
 	return write(locations)
 	
 
-
+'''
 if __name__=="__main__":
 	x = 40.6937957
 	y = -73.9858845
 	main(x,y)
 
-
+'''

@@ -11,5 +11,6 @@ class Config(object):
     SECRET_KEY = 'my precious'
     WEBSITE_NAME = 'Feed Me'
     GOOGLE_API_KEY = os.environ.get('GOOGLE_API_KEY')  #  fetch the google api key from .env
+    YELP_API_KEY = os.environ.get('YELP_API_KEY')
    
 
