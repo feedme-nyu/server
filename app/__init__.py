@@ -16,5 +16,7 @@ def create_app(config_class=Config):
     app.config.from_object(config_class)
     register_app_blueprints(app)
     return app
+    
+    
 
 

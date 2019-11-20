@@ -3,8 +3,9 @@ import json
 import csv
 import time
 import geopy.distance
-import populartimes
+from populartimes import get_id
 import time
+from flask import current_app
 
 class PlaceData(object):
 	"""docstring for PlaceData"""
@@ -41,7 +42,6 @@ class GooglePlaces():
 	#one call does -124
 	def __init__(self,key):
 		print("fetch_area() -> GooglePlaces()")
-		print(key)
 		self.apiKey = key
 		
 	def searchL(self, location, types):
@@ -84,6 +84,7 @@ class GooglePlaces():
 		return details
 
 def ranking(pdata,rank,day,index): #getting the rnaking
+    #print("fetch_area -> ranking()")
 	top = []
 	for place in pdata:
 		value = place.popular[day]['data'][index]
@@ -99,6 +100,7 @@ def ranking(pdata,rank,day,index): #getting the rnaking
 	return final_result
 
 def write(locations): #write the csv
+    #print("fetch_area -> write()")
 	timestr = time.strftime("%Y%m%d-%H%M%S")
 	goal = 0
 	cusine = 0
@@ -127,7 +129,7 @@ def main(x,y):
 	print("x", x)
 	print("y", y)
 	
-	api_key = bp.config["GOOGLE_API_KEY"]
+	api_key = current_app.config["GOOGLE_API_KEY"]
 	
 	locations = []
 	coords = str(x)+','+str(y)
@@ -146,8 +148,8 @@ def main(x,y):
 		except KeyError:
 			price_level = 2
 		try:
-			details = populartimes.get_id(key,place['place_id'])
-			#print(detail)
+			details = get_id(key,place['place_id'])
+			print(detail)
 		except:
 			print("Failed")
 		if(details is not None):
