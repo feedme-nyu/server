@@ -2,6 +2,7 @@ import requests
 import json
 import csv
 import time
+import time
 import geopy.distance
 from populartimes import get_id
 import time
@@ -9,7 +10,7 @@ from flask import current_app
 
 class PlaceData(object):
 	"""docstring for PlaceData"""
-	def __init__(self, name, rating_n, opening_hours, distance, price_level,rating,frequency, popular, time_spent, place_id):
+	def __init__(self, name, rating_n, opening_hours, distance, price_level,rating,frequency, popular, time_spent, place_id, photo,address):
 		super(PlaceData, self).__init__()
 		self.name = name
 		self.rating_n=rating_n
@@ -21,6 +22,8 @@ class PlaceData(object):
 		self.popular=popular
 		self.time_spent=time_spent
 		self.place_id=place_id
+		self.photo=photo
+		self.address=address
 		
 	def printd(self):
 		print("===================PLACE===================")
@@ -104,32 +107,38 @@ def write(locations): #write the csv
 	timestr = time.strftime("%Y%m%d-%H%M%S")
 	goal = 0
 	cusine = 0
-	fieldnames = ['name','rating_n', 'opening_hours','distance','price_level','rating','frequency','time_spent','Went?']
+	field = ['place_id','name','rating_n', 'opening_hours','distance','price_level','rating','frequency','time_spent','Went?','photo','address']
 	write_file = "Alpha"+timestr+".csv"
-	with open('Alpha.csv', "w") as csvfile:
-		writer = csv.DictWriter(csvfile,fieldnames=fieldnames)
+	with open(write_file, "w") as csvfile:
+		writer = csv.DictWriter(csvfile,fieldnames=field)
+		writer.writeheader()
 		rank = 9
 		for day in range(5): #five days
 			for index in range(12,23):
-				#top = ranking(locations,rank,day,index)
+				top = ranking(locations,rank,day,index)
 				#print(top)
 				for place in locations:
 					for time_spent in place.time_spent:
-						# if(place.place_id in top):
-						# 	goal = 1
-						# else:
-						# 	goal = 0
+						if(place.place_id in top):
+							goal = 1
+						else:
+							goal = 0
 						goal = place.popular[day]['data'][index]
-						writer.writerow({'name':place.name,'rating_n':place.rating_n, 'opening_hours': place.opening_hours,'distance':place.distance,'price_level':place.price_level,'rating':place.rating,'frequency':place.frequency,'time_spent':time_spent,'Went?':goal})
-						print(place.name)
+						writer.writerow({'place_id':place.place_id,'name':place.name,'rating_n':place.rating_n,
+						 'opening_hours':place.opening_hours,'distance':place.distance,
+						'price_level':place.price_level,'rating':place.rating,
+						'frequency':place.frequency,'time_spent':time_spent,
+						'Went?':goal,'photo':place.photo,'address':place.address})
 	print("Done Writing")
+	return write_file
 				
 def main(x,y):
 	# print("fetch_area() -> main(x, y)")
 	# print("x", x)
 	# print("y", y)
 	
-	api_key = current_app.config["GOOGLE_API_KEY"]
+	api_key = "AIzaSyDLtBrh0pIyf75x7DDpZHIkEyEHH4Ng3Gk"
+
 	
 	locations = []
 	coords = str(x)+','+str(y)
@@ -139,12 +148,18 @@ def main(x,y):
 	places = Search.searchL(coords,"restaurant")
 	fields = ['name', 'user_ratings_total', 'opening_hours', 'price_level', 'rating']
 	for place in places:
-		print(place['place_id'])
+		time.sleep(1)
 		details=None
-		#details = Search.Pdetails(place['place_id'], fields)
+		try:
+			photo_reference = place['photo_reference']
+		except KeyError:
+			photo_reference = "null"
+		try:
+			place_id = place['place_id']
+		except KeyError:
+			place_id = "null"
 		try:
 			price_level = place['price_level']
-			print(price_level)
 		except KeyError:
 			price_level = 2
 		try:
@@ -190,17 +205,23 @@ def main(x,y):
 				time_spent = details['time_spent']
 			except KeyError:
 				time_spent = [15,15]
+			try:
+				address = details['address']
+			except KeyError:
+				address = "Earth"
+			
 			frequency=0
-			pdata = PlaceData(name, rating_n, opening_hours, distance, price_level,rating,frequency, popular, time_spent,place['place_id'])
+			pdata = PlaceData(name, rating_n, opening_hours, distance, price_level,rating,frequency, popular, time_spent,place_id,photo_reference,address)
 			locations.append(pdata)
 	#now sort
 	#get top 7 rest
-	write(locations)
+	return write(locations)
+	
 
-"""
+
 if __name__=="__main__":
 	x = 40.6937957
 	y = -73.9858845
 	main(x,y)
-"""
+
 
