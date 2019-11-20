@@ -131,7 +131,7 @@ def write(locations): #write the csv
 	print("Done Writing")
 	return write_file
 				
-def main(x,y):
+def main(x,y,user_id):
 	# print("fetch_area() -> main(x, y)")
 	# print("x", x)
 	# print("y", y)
@@ -208,8 +208,10 @@ def main(x,y):
 				address = details['address']
 			except KeyError:
 				address = "Earth"
-			
-			frequency=0
+			try:
+				#use to get frequency for flare
+			except KeyError:
+				frequency=0
 			pdata = PlaceData(name, rating_n, opening_hours, distance, price_level,rating,frequency, popular, time_spent,place_id,photo_reference,address)
 			locations.append(pdata)
 	#now sort

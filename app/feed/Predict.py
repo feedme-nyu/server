@@ -38,7 +38,8 @@ def vodoo(new_csv):
 	raw_data.drop_duplicates(subset = "place_id",keep='last',inplace=True)
 	print(raw_data.head(30))
 	print(raw_data.shape)
-	#if(raw_data.shape[0] == 0):
+	if(raw_data.shape[0] <= 20):
+		difference = raw_data.shape[0]
 		
 	jayson = raw_data.to_json(orient="index")
 

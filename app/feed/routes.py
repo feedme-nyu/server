@@ -11,12 +11,13 @@ def try_out():
     
 @bp.route("/find_restaurant/", methods=['GET', 'POST'])
 def find_restaurant():
-    #coords = request.arg.to_dict()
+    #coords = request.arg.to_dict() #?x=100&y=200
     coords = request.get_json()
     x = coords['x']
     y = coords['y']
+    user_id = coords['user_id']
     print("coords:", x, y)
-    new_csv = main(x,y)
+    new_csv = main(x,y,user_id)
     ConfigureKey(current_app.config["YELP_API_KEY"])
     jayson_file = vodoo(new_csv)
     return jsonify(jayson_file)
