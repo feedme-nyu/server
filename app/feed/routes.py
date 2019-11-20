@@ -1,5 +1,5 @@
 from app.feed import bp
-from flask import jsonify, request
+from flask import jsonify, request, current_app
 
 @bp.route("/try")
 def try_out():
