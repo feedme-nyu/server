@@ -40,9 +40,9 @@ class PlaceData(object):
 class GooglePlaces():
 	#one call does -124
 	def __init__(self,key):
-	    print("fetch_area() -> GooglePlaces()")
-	    print(key)
-	    self.apiKey = key
+		print("fetch_area() -> GooglePlaces()")
+		print(key)
+		self.apiKey = key
 		
 	def searchL(self, location, types):
 		endpoint_url = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?"
@@ -123,12 +123,12 @@ def write(locations): #write the csv
 	print("Done Writing")
 				
 def main(x,y):
-        print("fetch_area() -> main(x, y)")
-        print("x", x)
-        print("y", y)
-    
-        api_key = bp.config["GOOGLE_API_KEY"]
-    
+	print("fetch_area() -> main(x, y)")
+	print("x", x)
+	print("y", y)
+	
+	api_key = bp.config["GOOGLE_API_KEY"]
+	
 	locations = []
 	coords = str(x)+','+str(y)
 	
