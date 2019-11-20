@@ -22,8 +22,6 @@ def find_restaurant():
     return jsonify(jayson_file)
     #return "ok",200
     
-
-    
 @bp.route("/FEEDME", methods=["GET", "POST"])
 def FEEDME():
     #new_csv = main(40.6937957, -73.9858845)
