@@ -2,6 +2,10 @@ from app.feed import bp
 from flask import jsonify, request, current_app
 from app.feed.fetch_area import main
 from app.feed.Predict import vodoo, ConfigureKey
+import google.auth.transport.requests
+import google.oauth2.id_token
+
+HTTP_REQUEST = google.auth.transport.requests.Request()
 
 @bp.route("/try")
 def try_out():
@@ -24,9 +28,29 @@ def find_restaurant():
     
 @bp.route("/FEEDME", methods=["GET", "POST"])
 def FEEDME():
-    print("routes.py -> FEEDME()")
+    # Authentication BEGIN
+    # From THIS tutorial: https://cloud.google.com/appengine/docs/standard/python/authenticating-users-firebase-appengine
+    try : 
+        id_token = request.headers["Authorization"].split(' ').pop()
+    except KeyError :
+        return 'Unauthorized', 401
+    print("token", id_token)
+    claims = google.oauth2.id_token.verify_firebase_token(
+        id_token, HTTP_REQUEST)
+    if not claims:
+        return 'Unauthorized', 401
+    # Authentication END
+    
+
+    # print("routes.py -> FEEDME()")
     #new_csv = main(40.6937957, -73.9858845)
+    
     new_csv="app/feed/Alpha20191120-070314.csv"
-    jayson_file = vodoo(new_csv)
+    jayson_file = vodoo(new_csv) # This is literally a year of work in one function call...
     return jsonify(jayson_file)
       
+@bp.errorhandler(500)
+def server_error(e):
+    # Log the error and stacktrace.
+    print(e)
+    return 'An internal error occurred.', 500
