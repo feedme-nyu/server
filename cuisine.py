@@ -6,11 +6,12 @@ from flask import current_app
 
 reference = {}
 reverse = {}
+initialGraph = []
 graph = []
 virtuals = []
 
 #yelpkey = current_app.config["YELP_API_KEY"]
-yelpkey = None 
+yelpkey = None
 maxint = float("inf")
 
 with open("weights.txt", "r") as f:
@@ -28,9 +29,10 @@ with open("weights.txt", "r") as f:
         line = f.readline()[:-1]
     line = f.readline()[:-1]
     while line :
-        graph.append(map(float, line.split(",")))
+        initialGraph.append(list(map(float, line.split(","))))
         line = f.readline()[:-1]
 
+graph = initialGraph
 cred = credentials.Certificate('key.json')
 default_app = initialize_app(cred)
 db = firestore.client()
@@ -153,12 +155,12 @@ def FetchRestaurantCategory(name, address) :
     result = collection.document(identifier).get().to_dict()
     if result == None :
         if address[0] == None or address[1] == None:
-          r = requests.get("https://api.yelp.com/v3/businesses/search", 
+            r = requests.get("https://api.yelp.com/v3/businesses/search", 
                         params={"term": name, 
                                 "limit": 50, "categories": "restaurants" },
                         headers={'Authorization': 'Bearer ' + current_app.config["YELP_API_KEY"]})  
         else :
-          r = requests.get("https://api.yelp.com/v3/businesses/search", 
+            r = requests.get("https://api.yelp.com/v3/businesses/search", 
                         params={"term": name,
                                 "location": " ".join(address).encode("utf-8"), 
                                 "limit": 50, "categories": "restaurants" },
@@ -183,6 +185,10 @@ def FetchRestaurantCategory(name, address) :
             upload.append(temp)
         for i in upload :
             result = collection.document(i["id"]).set(i)
+        if categories is None :
+            collection.document(identifier).set({"id": identifier, "categories": []})
+    elif result["categories"] == [] :
+        return None
     else :
         categories = result["categories"]
     return categories
@@ -201,14 +207,14 @@ def FetchUserWeights (firebase_id) :
 def CuisineRater (user, restaurants) :
     restaurantWeights = []
     userWeights = FetchUserWeights("teddy")
-    print("user")
     for r in restaurants :
         w = FetchRestaurantWeights(r["name"], r["address"])
         if w is None :
-            restaurantWeights.append([0.0] * len(userWeights))
+            restaurantWeights.append([])
+            for i in range(len(userWeights)) :
+                restaurantWeights[-1].append(i)
         else :
             restaurantWeights.append(w)
-    print("rest")
     newGraph = []
     for r in graph :
         newGraph.append([])
@@ -221,7 +227,6 @@ def CuisineRater (user, restaurants) :
     newGraph.append([])
     for c in userWeights :
         newGraph[-1].append(c)
-
     newGraphLength = len(newGraph)
     for rI in range(len(graph)) : # for each row of old graph, copy edge from restaurants
         r = newGraph[rI]
@@ -235,26 +240,23 @@ def CuisineRater (user, restaurants) :
     dijs = dijkstra(newGraph, len(newGraph) - 1) # the last node is the user
     
     dijs = dijs[len(graph) : -1] # don't include distance to user itself
-
     output = []
     for i in range(len(dijs)) :
         output.append((restaurants[i]["name"], dijs[i]))
     return output
 
 # print FecthUserWeights("teddy")
-'''
-r = requests.get("https://api.yelp.com/v3/businesses/search", 
-                        params={"location": "6 Metrotech Center Brooklyn, NY 11201", 
-                                "limit": 50, "categories": "restaurants" },
-                        headers={'Authorization': 'Bearer ' + yelpkey})
+# r = requests.get("https://api.yelp.com/v3/businesses/search", 
+#                         params={"location": "6 Metrotech Center Brooklyn, NY 11201", 
+#                                 "limit": 50, "categories": "restaurants" },
+#                         headers={'Authorization': 'Bearer ' + yelpkey})
 
-yelpData = json.loads(r.content)
-restaurants = yelpData["businesses"][:10]
-for i in range(len(restaurants)) :
-    restaurants[i]["address"] = [
-        restaurants[i]["location"]["address1"],
-        restaurants[i]["location"]["address3"]
-    ]
+# yelpData = json.loads(r.content)
+# restaurants = yelpData["businesses"][:10]
+# for i in range(len(restaurants)) :
+#     restaurants[i]["address"] = [
+#         restaurants[i]["location"]["address1"],
+#         restaurants[i]["location"]["address3"]
+#     ]
 
-print CuisineRater("teddy", restaurants)
-'''
+# print(CuisineRater("teddy", restaurants))

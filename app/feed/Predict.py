@@ -51,8 +51,6 @@ def vodoo(new_csv):
 
 	restaurants = json.loads(jayson)
 	interface = []
-
-	print(len(restaurants))
 	
 	for r in restaurants :
 		addr = restaurants[r]["address"].split(",")
@@ -61,7 +59,6 @@ def vodoo(new_csv):
 			"address": [addr[0], ",".join(addr[1:])]
 		})
 	
-	print(interface)
 	print(CuisineRater("teddy", interface))	
 
 	#print(raw_data.to_json(orient="index"))
