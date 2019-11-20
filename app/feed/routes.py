@@ -3,13 +3,13 @@ from flask import jsonify, request, current_app
 from app.feed.fetch_area import main
 from app.feed.Predict import vodoo, ConfigureKey
 
-
 @bp.route("/try")
 def try_out():
     return jsonify("running")
     
 @bp.route("/find_restaurant/", methods=['GET', 'POST'])
 def find_restaurant():
+    print("routes.py -> find_restaurant()")
     #coords = request.arg.to_dict() #?x=100&y=200
     coords = request.get_json()
     x = coords['x']
@@ -24,6 +24,7 @@ def find_restaurant():
     
 @bp.route("/FEEDME", methods=["GET", "POST"])
 def FEEDME():
+    print("routes.py -> FEEDME()")
     #new_csv = main(40.6937957, -73.9858845)
     new_csv="app/feed/Alpha20191120-070314.csv"
     jayson_file = vodoo(new_csv)
