@@ -41,7 +41,7 @@ class PlaceData(object):
 class GooglePlaces():
 	#one call does -124
 	def __init__(self,key):
-		print("fetch_area() -> GooglePlaces()")
+		# print("fetch_area() -> GooglePlaces()")
 		self.apiKey = key
 		
 	def searchL(self, location, types):
@@ -84,7 +84,7 @@ class GooglePlaces():
 		return details
 
 def ranking(pdata,rank,day,index): #getting the rnaking
-    #print("fetch_area -> ranking()")
+    # print("fetch_area -> ranking()")
 	top = []
 	for place in pdata:
 		value = place.popular[day]['data'][index]
@@ -100,7 +100,7 @@ def ranking(pdata,rank,day,index): #getting the rnaking
 	return final_result
 
 def write(locations): #write the csv
-    #print("fetch_area -> write()")
+    # print("fetch_area -> write()")
 	timestr = time.strftime("%Y%m%d-%H%M%S")
 	goal = 0
 	cusine = 0
@@ -125,9 +125,9 @@ def write(locations): #write the csv
 	print("Done Writing")
 				
 def main(x,y):
-	print("fetch_area() -> main(x, y)")
-	print("x", x)
-	print("y", y)
+	# print("fetch_area() -> main(x, y)")
+	# print("x", x)
+	# print("y", y)
 	
 	api_key = current_app.config["GOOGLE_API_KEY"]
 	
@@ -148,8 +148,7 @@ def main(x,y):
 		except KeyError:
 			price_level = 2
 		try:
-			details = get_id(key,place['place_id'])
-			print(detail)
+			details = get_id(api_key, place['place_id'])
 		except:
 			print("Failed")
 		if(details is not None):
