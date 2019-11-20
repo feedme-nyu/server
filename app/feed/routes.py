@@ -6,8 +6,7 @@ from app.feed.Predict import vodoo, ConfigureKey
 
 @bp.route("/try")
 def try_out():
-    print(current_app.config["GOOGLE_API_KEY"])    
-    return jsonify("try_out()")
+    return jsonify("running")
     
 @bp.route("/find_restaurant/", methods=['GET', 'POST'])
 def find_restaurant():
