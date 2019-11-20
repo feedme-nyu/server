@@ -3,7 +3,6 @@ from flask import jsonify, request, current_app
 from app.feed.fetch_area import main
 from app.feed.Predict import vodoo, ConfigureKey
 
-
 @bp.route("/try")
 def try_out():
     print(current_app.config["GOOGLE_API_KEY"])    
@@ -22,8 +21,6 @@ def find_restaurant():
     jayson_file = vodoo(new_csv)
     return jsonify(jayson_file)
     #return "ok",200
-    
-
     
 @bp.route("/FEEDME", methods=["GET", "POST"])
 def FEEDME():

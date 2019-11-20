@@ -208,11 +208,8 @@ def main(x,y,user_id):
 				address = details['address']
 			except KeyError:
 				address = "Earth"
-			try:
-				#use to get frequency for flare
-			except KeyError:
-				frequency=0
-			pdata = PlaceData(name, rating_n, opening_hours, distance, price_level,rating,frequency, popular, time_spent,place_id,photo_reference,address)
+			frequency = 0
+			pdata = PlaceData(name, rating_n, opening_hours, distance, price_level,rating,frequency, popular, time_spent, place_id, photo_reference,address)
 			locations.append(pdata)
 	#now sort
 	#get top 7 rest
