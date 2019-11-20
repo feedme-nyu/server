@@ -3,7 +3,6 @@ import requests
 # URL
 url = 'http://localhost:5000/api/find_restaurant/'
 
-# Change the value of experience that you want to test
 payload = {
 	'x':40.6937957,
 	'y':-73.9858845
