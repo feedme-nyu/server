@@ -83,15 +83,16 @@ def vodoo(new_csv, uid):
 	print("Starting Level 2")
 	level2 = CuisineRater(uid, interface) # Level 2 ML
 
-	# for d in level2 :
-	# 	for d1 in decisions :
-	# 		if d1["place_id"] == d[0] :
-	# 			d1[score] = d[1]
+	for d in level2 :
+		for d1 in decisions :
+			if d1["place_id"] == d[0] :
+				d1[score] = d[1]
 
 	return {"status" : 200, "decisions": decisions}
-
+'''
 if __name__=="__main__":
 	new_csv = "Alpha20191120-070314 (copy).csv"
 	vodoo(new_csv)
 	
+'''
 
