@@ -17,7 +17,7 @@ def create_app(config_class=Config):
     print("__init__.py -> create_app()")
     
     sched = BackgroundScheduler(daemon=True)
-    sched.add_job(retrain_model,'interval',seconds=20)
+    sched.add_job(retrain_model,'interval',hours=8)
     sched.start()
     
     #print(sched)
