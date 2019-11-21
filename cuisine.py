@@ -179,7 +179,7 @@ def FetchRestaurantCategory(name, address) :
                 addr = i['location']['address1'].lower().split(" ")
                 if addr[-1] in abbreviations :
                     addr[-1] = abbreviations[addr[-1]]
-                identifier = md5((i['name'] + " ".join(addr)).encode('utf8')).hexdigest()
+                identifier = md5((i['name'].lower() + " ".join(addr)).encode('utf8')).hexdigest()
             temp = {
                 "id": identifier,
                 "categories": []
