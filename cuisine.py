@@ -14,6 +14,11 @@ virtuals = []
 yelpkey = None
 maxint = float("inf")
 
+abbreviations = {}
+
+with open("abbrv.json", "r") as file :
+    abbreviations = json.loads(file.read())[0]
+
 with open("weights.txt", "r") as f:
     line = f.readline()[:-1]
     i = 0
@@ -38,6 +43,8 @@ default_app = initialize_app(cred)
 db = firestore.client()
 collection = db.collection('restaurants')
 
+def GetCollection():
+    return collection
 
 def Configure(key) :
     global yelpkey
@@ -120,10 +127,6 @@ def GetClosestNeighbor(graph, row, n) :
     
     return neighbors
 
-def GetCuisineScore(name, address) :
-    c = FetchRestaurantWeights(name, address)
-    return GetClosestNeighbor(graph, c, 5)
-
 def FetchRestaurantWeights(name, address) :
     if not isinstance(address, list) :
         raise TypeError("Address parameter needs to be a list in format:\n\t[0] => Street Address\n\t[1] => City, State, Country")
@@ -149,21 +152,21 @@ def FetchRestaurantWeights(name, address) :
 def FetchRestaurantCategory(name, address) :
     categories = None
     if len(address) == 0 :
-        identifier = md5((name).encode('utf8')).hexdigest()
+        identifier = md5((name.lower()).encode('utf8')).hexdigest()
     else :
-        identifier = md5((name + address[0]).encode('utf8')).hexdigest()
+        identifier = md5((name.lower() + address[0].lower()).encode('utf8')).hexdigest()
     result = collection.document(identifier).get().to_dict()
     if result == None :
-        if address[0] == None or address[1] == None:
+        if address[0] == None and address[1] == None:
             r = requests.get("https://api.yelp.com/v3/businesses/search", 
                         params={"term": name, 
-                                "limit": 50, "categories": "restaurants" },
+                                "limit": 10, "categories": "restaurants" },
                         headers={'Authorization': 'Bearer ' + current_app.config["YELP_API_KEY"]})  
         else :
             r = requests.get("https://api.yelp.com/v3/businesses/search", 
                         params={"term": name,
                                 "location": " ".join(address).encode("utf-8"), 
-                                "limit": 50, "categories": "restaurants" },
+                                "limit": 10, "categories": "restaurants" },
                         headers={'Authorization': 'Bearer ' + current_app.config["YELP_API_KEY"]})
         yelpData = json.loads(r.content)
         if "error" in yelpData :
@@ -171,9 +174,12 @@ def FetchRestaurantCategory(name, address) :
         upload = []
         for i in yelpData["businesses"] :
             if i['location']['address1'] == None :
-                identifier = md5((i['name']).encode('utf8')).hexdigest()
+                identifier = md5((i['name'].lower()).encode('utf8')).hexdigest()
             else :
-                identifier = md5((i['name'] + i['location']['address1']).encode('utf8')).hexdigest()
+                addr = i['location']['address1'].lower().split(" ")
+                if addr[-1] in abbreviations :
+                    addr[-1] = abbreviations[addr[-1]]
+                identifier = md5((i['name'].lower() + " ".join(addr)).encode('utf8')).hexdigest()
             temp = {
                 "id": identifier,
                 "categories": []
@@ -186,6 +192,7 @@ def FetchRestaurantCategory(name, address) :
         for i in upload :
             result = collection.document(i["id"]).set(i)
         if categories is None :
+            print("uploaded")
             collection.document(identifier).set({"id": identifier, "categories": []})
     elif result["categories"] == [] :
         return None
@@ -242,7 +249,8 @@ def CuisineRater (user, restaurants) :
     dijs = dijs[len(graph) : -1] # don't include distance to user itself
     output = []
     for i in range(len(dijs)) :
-        output.append((restaurants[i]["name"], dijs[i]))
+        output.append((restaurants[i]["place_id"], dijs[i]))
+    
     return output
 
 # print FecthUserWeights("teddy")

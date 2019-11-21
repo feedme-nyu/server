@@ -107,7 +107,7 @@ We have implemented our machine learning in two steps:
 
 _Step 1: Choosing Restaurants_
 
-In this step we utilize a single, logistic regression to choose 20 restaurants nearby to the user which our algorithm has identified the user has the high probability of going to. This is based on many factors including: price, distance, wait time, user rating, user reviews, and frequency of visits from customers. This model will output 20 restaurants to be fed into Step 2. This is implemented in `app/feed/fetch_area.py` and `app/feed/Predict.py`.
+In this step we utilize a single, binary classification logistic regression to choose 20 restaurants nearby to the user which our algorithm has identified the user has the high probability of going to (i.e. the algorithm is predicting either YES the user would want to go there or NO they would not). This is based on many factors including: price, distance, wait time, user rating, user reviews, and frequency of visits from customers. This model will output 20 restaurants to be fed into Step 2. This is implemented in `app/feed/fetch_area.py` and `app/feed/Predict.py`.
 
 _Step 2: User Preference_
 
