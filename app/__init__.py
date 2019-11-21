@@ -1,5 +1,8 @@
 from flask import Flask
 from config import Config
+from app.feed.train_center import test_cron, merge_dataset, retrain_model
+from apscheduler.schedulers.background import BackgroundScheduler
+import atexit
 
 def register_app_blueprints(app):
     print("__init__.py -> register_app_blueprints()")
@@ -12,6 +15,12 @@ def register_app_blueprints(app):
 
 def create_app(config_class=Config):
     print("__init__.py -> create_app()")
+    
+    sched = BackgroundScheduler(daemon=True)
+    sched.add_job(retrain_model,'interval',seconds=20)
+    sched.start()
+    
+    #print(sched)
     app = Flask(__name__)
     app.config.from_object(config_class)
     register_app_blueprints(app)
