@@ -89,6 +89,7 @@ Our server is implemented using Python and Flask. The following files are pertin
             fetch_area.py
             Predict.py
             routes.py
+	    train_center.py
         routes.py
     cuisine.py
     weights.txt
@@ -101,6 +102,8 @@ Our server is implemented using Python and Flask. The following files are pertin
 The file `config.py` is used to configure the server on deployment. The file `fm.py` is the entry point for the server. `app/routes.py` and `app/feed/routes.py` define the logical routes for the server.
 
 The `Dockfile` is used to build the docker image to run the server on. We chose to deploy our app to Google Cloud's flexible App Engine due to the "flexibility" of the service to allocate more resources to our service during high volume as well as its integration to the Firebase and Google Places API services. We are using an Ubuntu image due to our experience with that OS as well as the availability of the required packages (we were originally going to use Alpine, but it lacked a precompiled numpy module for Python 3).
+
+Additionally, a daemon process runs every 8 hours to collect all the fetched google requests and merge them into one Alpha.csv file. The daemon thread will then retrain the multinomical logistic regression with all the updated datasets.  
 
 ### Machine Learning
 We have implemented our machine learning in two steps:
