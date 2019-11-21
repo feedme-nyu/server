@@ -6,6 +6,9 @@ import geopy.distance
 from populartimes import get_id
 import time
 from flask import current_app
+from firebase_admin import credentials, firestore, initialize_app
+from cuisine import GetCollection
+from hashlib import md5
 
 class PlaceData(object):
 	"""docstring for PlaceData"""
@@ -55,7 +58,6 @@ class GooglePlaces():
 		#print(results) #debug
 		#Google returns max of 60.Need more for ML
 		places.extend(results['results'])
-		time.sleep(3)
 		
 		"""
 		while "next_page_token" in results:
@@ -146,11 +148,13 @@ def main(x,y,user_id):
 	places = Search.searchL(coords,"restaurant")
 	fields = ['name', 'user_ratings_total', 'opening_hours', 'price_level', 'rating']
 	for place in places:
-		time.sleep(1)
+		# time.sleep(0.1)
 		details=None
-		print(place)
+		print(place['place_id'])
 		try:
-			photo_reference = place['photos']['photo_reference']
+			photo_reference = []
+			for p in place['photos'] :
+				photo_reference.append(p['photo_reference'])
 		except KeyError:
 			photo_reference = "null"
 		try:
@@ -166,7 +170,7 @@ def main(x,y,user_id):
 		except:
 			print("Failed")
 		if(details is not None):
-			print(details)
+			# print(details)
 			try:
 				name = details['name']
 			except KeyError:
@@ -208,7 +212,15 @@ def main(x,y,user_id):
 				address = details['address']
 			except KeyError:
 				address = "Earth"
-			frequency = 0 #need to update freq
+			try :
+				if address == "Earth" :
+					identifier = md5((name).encode('utf8')).hexdigest()
+				else :
+					identifier = md5((name + address.split(',')[0]).encode('utf8')).hexdigest()
+				frequency = GetCollection().document(identifier).get().to_dict()["frequency"]
+			except :
+				print("fall")
+				frequency = 0 #need to update freq
 			pdata = PlaceData(name, rating_n, opening_hours, distance, price_level,rating,frequency, popular, time_spent, place_id, photo_reference,address)
 			locations.append(pdata)
 	#now sort
