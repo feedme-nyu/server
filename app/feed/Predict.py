@@ -29,7 +29,7 @@ def vodoo(new_csv, uid):
 	model = pickle.load(fd, encoding = 'unicode_escape')
 	
 	raw_data = pd.read_csv(new_csv, header = 0)
-
+	
 	x_val = raw_data[raw_data.columns[2:9]]
 	
 	#  array of 0 and 1s 
@@ -46,15 +46,15 @@ def vodoo(new_csv, uid):
 	if(results.shape[0] < 20):
 		difference = 20 - results.shape[0]
 		subsample = unused_data.sample(n = difference)
-		np.append(results, subsample)
+		results = pd.concat([results, subsample], axis=0)
+		# np.concatenate(results, subsample)
+		
 		
 	jayson = results.to_json(orient="index")
 
 	restaurants = json.loads(jayson)
 	interface = []
 	decisions = []
-
-	print(len(restaurants))
 
 	for r in restaurants:
 		addr = restaurants[r]["address"].split(",")
@@ -78,15 +78,13 @@ def vodoo(new_csv, uid):
 			"score": 0
 		})
 
-	print(len(decisions))
-
 	print("Starting Level 2")
 	level2 = CuisineRater(uid, interface) # Level 2 ML
 
 	for d in level2 :
 		for d1 in decisions :
 			if d1["place_id"] == d[0] :
-				d1[score] = d[1]
+				d1["score"] = d[1]
 
 	return {"status" : 200, "decisions": decisions}
 '''
