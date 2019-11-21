@@ -57,9 +57,9 @@ def vodoo(new_csv):
 		    "name": restaurants[r]["name"],
 		    "address": [addr[0], ",".join(addr[1:])]
 	    })
-
-    #print(CuisineRater("teddy", interface))	
-
+	    
+    print("doing cousineRater")
+    print(CuisineRater("teddy", interface))	
     #print(raw_data.to_json(orient="index"))
     return jayson
 
