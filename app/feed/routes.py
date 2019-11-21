@@ -34,6 +34,7 @@ def try_out():
 def FEEDME():
     # Authentication BEGIN
     # From THIS tutorial: https://cloud.google.com/appengine/docs/standard/python/authenticating-users-firebase-appengine
+    """
     try : 
         id_token = request.headers["Authorization"].split(' ').pop()
     except KeyError :
@@ -43,6 +44,7 @@ def FEEDME():
     if not claims:
         return 'Unauthorized', 401
     # Authentication END
+    """
     
     arguments = request.args.to_dict()
     

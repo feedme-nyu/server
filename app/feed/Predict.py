@@ -25,7 +25,7 @@ def ConfigureKey(key) :
 
 def vodoo(new_csv, uid):
 	print("Predict.py -> vodoo()")
-	fd = open('app/feed/Logistic.sav','rb') 
+	fd = open('Logistic.sav','rb') 
 	model = pickle.load(fd, encoding = 'unicode_escape')
 	
 	raw_data = pd.read_csv(new_csv, header = 0)
@@ -42,6 +42,9 @@ def vodoo(new_csv, uid):
 	unused_data = raw_data[raw_data["Chosen"] == 0.0]
 	
 	results.drop_duplicates(subset = "place_id", keep='last', inplace=True)
+	print("results:", results.shape)
+	print(results.head(10))
+	print(results.tail(10))
 
 	if(results.shape[0] < 20):
 		difference = 20 - results.shape[0]
@@ -84,7 +87,7 @@ def vodoo(new_csv, uid):
 	for d in level2 :
 		for d1 in decisions :
 			if d1["place_id"] == d[0] :
-				d1[score] = d[1]
+				d1["score"] = d[1]
 
 	return {"status" : 200, "decisions": decisions}
 '''
