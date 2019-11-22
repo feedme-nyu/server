@@ -128,11 +128,13 @@ def GetClosestNeighbor(graph, row, n) :
     return neighbors
 
 def FetchRestaurantWeights(name, address) :
+    output = []
     if not isinstance(address, list) :
         raise TypeError("Address parameter needs to be a list in format:\n\t[0] => Street Address\n\t[1] => City, State, Country")
     categories = FetchRestaurantCategory(name, address)
     if categories == None :
-        return None
+        raise Exception
+    output = [categories]
     c = []
     for i in categories :
         if len(c) == 0 :
@@ -146,7 +148,8 @@ def FetchRestaurantWeights(name, address) :
                     c[r] = (c[r] + reference[i]) / 2
                 except KeyError :
                     pass
-    return c
+    output.append(c)
+    return output
         
 
 def FetchRestaurantCategory(name, address) :
@@ -174,14 +177,14 @@ def FetchRestaurantCategory(name, address) :
         upload = []
         for i in yelpData["businesses"] :
             if i['location']['address1'] == None :
-                identifier = md5((i['name'].lower()).encode('utf8')).hexdigest()
+                identifier2 = md5((i['name'].lower()).encode('utf8')).hexdigest()
             else :
                 addr = i['location']['address1'].lower().split(" ")
                 if addr[-1] in abbreviations :
                     addr[-1] = abbreviations[addr[-1]]
-                identifier = md5((i['name'].lower() + " ".join(addr)).encode('utf8')).hexdigest()
+                identifier2 = md5((i['name'].lower() + " ".join(addr)).encode('utf8')).hexdigest()
             temp = {
-                "id": identifier,
+                "id": identifier2,
                 "categories": []
             }
             for c in i["categories"] :
@@ -192,7 +195,6 @@ def FetchRestaurantCategory(name, address) :
         for i in upload :
             result = collection.document(i["id"]).set(i)
         if categories is None :
-            print("uploaded")
             collection.document(identifier).set({"id": identifier, "categories": []})
     elif result["categories"] == [] :
         return None
@@ -215,7 +217,12 @@ def CuisineRater (user, restaurants) :
     restaurantWeights = []
     userWeights = FetchUserWeights("teddy")
     for r in restaurants :
-        w = FetchRestaurantWeights(r["name"], r["address"])
+        try :
+            categories, w = FetchRestaurantWeights(r["name"], r["address"])
+        except :
+            w = None
+            categories = []
+        r["categories"] = categories
         if w is None :
             restaurantWeights.append([])
             for i in range(len(userWeights)) :
@@ -249,7 +256,7 @@ def CuisineRater (user, restaurants) :
     dijs = dijs[len(graph) : -1] # don't include distance to user itself
     output = []
     for i in range(len(dijs)) :
-        output.append((restaurants[i]["place_id"], dijs[i]))
+        output.append((restaurants[i]["place_id"], dijs[i], restaurants[i]["categories"]))
     
     return output
 

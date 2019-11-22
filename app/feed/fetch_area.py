@@ -7,8 +7,10 @@ from populartimes import get_id
 import time
 from flask import current_app
 from firebase_admin import credentials, firestore, initialize_app
+from google.api_core.exceptions import NotFound
 from cuisine import GetCollection
 from hashlib import md5
+import threading
 
 class PlaceData(object):
 	"""docstring for PlaceData"""
@@ -59,14 +61,11 @@ class GooglePlaces():
 		#Google returns max of 60.Need more for ML
 		places.extend(results['results'])
 		
-		"""
 		while "next_page_token" in results:
 			params["pagetoken"] = results["next_page_token"]
 			data = requests.get(endpoint_url, params = params) #JSON request
 			results = json.loads(data.content) #load the data from Json
 			places.extend(results['results'])
-			time.sleep(3)
-		"""
 			
 		return places
 
@@ -88,7 +87,7 @@ class GooglePlaces():
 		return details
 
 def ranking(pdata,rank,day,index): #getting the rnaking
-    # print("fetch_area -> ranking()")
+	# print("fetch_area -> ranking()")
 	top = []
 	for place in pdata:
 		value = place.popular[day]['data'][index]
@@ -104,7 +103,7 @@ def ranking(pdata,rank,day,index): #getting the rnaking
 	return final_result
 
 def write(locations): #write the csv
-    # print("fetch_area -> write()")
+	# print("fetch_area -> write()")
 	timestr = time.strftime("%Y%m%d-%H%M%S")
 	goal = 0
 	cusine = 0
@@ -132,12 +131,22 @@ def write(locations): #write the csv
 						'Went?':goal,'photo':place.photo,'address':place.address})
 	print("Done Writing")
 	return write_file
-				
+
+def CacheTimes (toBeCached):
+	print("Thread Started")
+	for c in toBeCached :
+		try :
+			GetCollection().document(c["id"]).update(c)
+		except NotFound:
+			GetCollection().document(c["id"]).set(c)
+	print("Thread Done")
+
 def main(x,y,user_id):
 	# print("fetch_area() -> main(x, y)")
 	# print("x", x)
 	# print("y", y)
-	
+	newCache = []
+
 	api_key = current_app.config["GOOGLE_API_KEY"]
 	
 	locations = []
@@ -147,10 +156,14 @@ def main(x,y,user_id):
 	
 	places = Search.searchL(coords,"restaurant")
 	fields = ['name', 'user_ratings_total', 'opening_hours', 'price_level', 'rating']
+	print(len(places))
 	for place in places:
 		# time.sleep(0.1)
 		details=None
-		print(place['place_id'])
+		try :
+			name = place['name'].encode('utf-8')
+		except :
+			name = ""
 		try:
 			photo_reference = []
 			for p in place['photos'] :
@@ -165,66 +178,71 @@ def main(x,y,user_id):
 			price_level = place['price_level']
 		except KeyError:
 			price_level = 2
+		try: 
+			location = place['geometry']['location']
+			coord1=(x,y)
+			coord2=(location['lat'], location['lng'])
+			distance = geopy.distance.vincenty(coord1, coord2).m
+		except KeyError:
+			distance = 210 # average of my research files
 		try:
-			details = get_id(api_key, place['place_id'])
-		except:
-			print("Failed")
-		if(details is not None):
-			# print(details)
-			try:
-				name = details['name']
-			except KeyError:
-				name = ""
-			try:
-				location = details['coordinates']
-				print(location)
-				coord1=(40.6937957,-73.9858845)
-				coord2=(location['lat'],location['lng'])
-				distance = geopy.distance.vincenty(coord1, coord2).m
-			except KeyError:
-				distance = 210 #average of my research files
-			try:
-				rating_n = details['rating_n']
-			except KeyError:
-				rating_n = 333
-
-			try:
-				cool = details['opening_hours']
-				if(cool):
-					opening_hours = 1
-				else:
-					opening_hours = 0
-			except KeyError:
+			rating_n = place['user_ratings_total']
+		except KeyError:
+			rating_n = 333
+		try:
+			rating = place['rating']
+		except KeyError:
+			rating = 2.3
+		try:
+			cool = place['opening_hours']['open_now']
+			if(cool):
+				opening_hours = 1
+			else:
 				opening_hours = 0
+		except KeyError :
+			opening_hours = 0
+		try:
+			address = place['formatted_address'].encode('utf-8')
+		except KeyError:
 			try:
-				rating = details['rating']
-			except KeyError:
-				rating = 2.3
-			try:
-				popular = details['populartimes']
-			except KeyError:
-				popular = [{'name': 'Monday', 'data': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 34, 56, 66, 58, 39, 24, 21, 29, 37, 33, 20, 0, 0]}, {'name': 'Tuesday', 'data': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 47, 81, 86, 59, 32, 26, 33, 43, 43, 33, 20, 0, 0]}, {'name': 'Wednesday', 'data': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 36, 68, 85, 74, 52, 43, 48, 52, 46, 32, 17, 0, 0]}, {'name': 'Thursday', 'data': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 43, 82, 100, 84, 61, 52, 47, 41, 40, 38, 29, 0, 0]}, {'name': 'Friday', 'data': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 38, 75, 98, 88, 61, 47, 55, 65, 60, 42, 21, 0, 0]}, {'name': 'Saturday', 'data': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 20, 32, 41, 44, 40, 32, 27, 30, 35, 32, 18, 0, 0]}, {'name': 'Sunday', 'data': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 11, 22, 33, 37, 37, 36, 34, 36, 41, 33, 14, 0, 0]}]
-			try:
-				time_spent = details['time_spent']
-			except KeyError:
-				time_spent = [15,15]
-			try:
-				address = details['address']
-			except KeyError:
+				address = place['vicinity'].encode('utf-8')
+			except KeyError :
 				address = "Earth"
-			try :
-				if address == "Earth" :
-					identifier = md5((name).encode('utf8')).hexdigest()
-				else :
-					identifier = md5((name + address.split(',')[0]).encode('utf8')).hexdigest()
-				frequency = GetCollection().document(identifier).get().to_dict()["frequency"]
-			except :
-				print("fall")
-				frequency = 0 #need to update freq
-			pdata = PlaceData(name, rating_n, opening_hours, distance, price_level,rating,frequency, popular, time_spent, place_id, photo_reference,address)
-			locations.append(pdata)
-	#now sort
-	#get top 7 rest
+		try :
+			if address == "Earth" :
+				identifier = md5((name.lower()).encode('utf8')).hexdigest()
+			else :
+				identifier = md5((name.lower() + address.split(',')[0].lower()).encode('utf8')).hexdigest()
+			restaurantCache = GetCollection().document(identifier).get().to_dict()
+			frequency = restaurantCache["frequency"]
+		except :
+			frequency = 0 #need to update freq
+		try:
+			# First try to get cached results:
+			details = restaurantCache["popularity"]
+			popular = details['populartimes']
+			time_spent = details['time_spent'].encode('utf-8')
+		except:
+			# Otherwise, get it from the other source
+			details = get_id(api_key, place['place_id'])
+			if(details is not None):	
+				try:
+					popular = details['populartimes']
+				except KeyError:
+					popular = [{'name': 'Monday', 'data': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 34, 56, 66, 58, 39, 24, 21, 29, 37, 33, 20, 0, 0]}, {'name': 'Tuesday', 'data': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 47, 81, 86, 59, 32, 26, 33, 43, 43, 33, 20, 0, 0]}, {'name': 'Wednesday', 'data': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 36, 68, 85, 74, 52, 43, 48, 52, 46, 32, 17, 0, 0]}, {'name': 'Thursday', 'data': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 43, 82, 100, 84, 61, 52, 47, 41, 40, 38, 29, 0, 0]}, {'name': 'Friday', 'data': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 38, 75, 98, 88, 61, 47, 55, 65, 60, 42, 21, 0, 0]}, {'name': 'Saturday', 'data': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 20, 32, 41, 44, 40, 32, 27, 30, 35, 32, 18, 0, 0]}, {'name': 'Sunday', 'data': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 11, 22, 33, 37, 37, 36, 34, 36, 41, 33, 14, 0, 0]}]
+				try:
+					time_spent = details['time_spent'].encode('utf-8')
+				except KeyError:
+					time_spent = [15,15]
+				newCache.append({"id": identifier, "popularity": {"populartimes": popular, "time_spent": time_spent}})
+			else :
+				popular = [{'name': 'Monday', 'data': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 34, 56, 66, 58, 39, 24, 21, 29, 37, 33, 20, 0, 0]}, {'name': 'Tuesday', 'data': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 47, 81, 86, 59, 32, 26, 33, 43, 43, 33, 20, 0, 0]}, {'name': 'Wednesday', 'data': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 36, 68, 85, 74, 52, 43, 48, 52, 46, 32, 17, 0, 0]}, {'name': 'Thursday', 'data': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 43, 82, 100, 84, 61, 52, 47, 41, 40, 38, 29, 0, 0]}, {'name': 'Friday', 'data': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 38, 75, 98, 88, 61, 47, 55, 65, 60, 42, 21, 0, 0]}, {'name': 'Saturday', 'data': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 20, 32, 41, 44, 40, 32, 27, 30, 35, 32, 18, 0, 0]}, {'name': 'Sunday', 'data': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 11, 22, 33, 37, 37, 36, 34, 36, 41, 33, 14, 0, 0]}]
+				time_spent = [15,15]
+
+		pdata = PlaceData(name, rating_n, opening_hours, distance, price_level,rating,frequency, popular, time_spent, place_id, photo_reference,address)
+		locations.append(pdata)
+	
+	threading.Thread(target=CacheTimes, args=(newCache,)).start()
 	return write(locations)
 	
 

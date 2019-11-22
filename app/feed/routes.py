@@ -11,7 +11,7 @@ HTTP_REQUEST = google.auth.transport.requests.Request()
 
 @bp.route("/try")
 def try_out():
-    return jsonify("running")
+    return jsonify("running version 1.2")
 
 # This is for debugging  
 # @bp.route("/find_restaurant/", methods=['GET', 'POST'])
@@ -34,17 +34,18 @@ def try_out():
 def FEEDME():
     # Authentication BEGIN
     # From THIS tutorial: https://cloud.google.com/appengine/docs/standard/python/authenticating-users-firebase-appengine
-    """
     try : 
         id_token = request.headers["Authorization"].split(' ').pop()
     except KeyError :
         return 'Unauthorized', 401
-    claims = google.oauth2.id_token.verify_firebase_token(
-        id_token, HTTP_REQUEST)
+    try :
+        claims = google.oauth2.id_token.verify_firebase_token(
+            id_token, HTTP_REQUEST)
+    except: 
+        return 'Authentication Error', 500
     if not claims:
         return 'Unauthorized', 401
     # Authentication END
-    """
     
     arguments = request.args.to_dict()
     
@@ -53,7 +54,9 @@ def FEEDME():
     user_id = arguments['uid']
     
     new_csv = main(x,y,user_id)
-    ConfigureKey(current_app.config["YELP_API_KEY"])
+    print("Length: ", len(new_csv))
+    # new_csv = "Alpha.csv"
+    
     jayson_file = vodoo(new_csv, user_id)
     print("DONE")
     return jsonify(jayson_file)

@@ -3,6 +3,7 @@ from hashlib import md5
 import requests
 import json
 from flask import current_app
+import threading
 
 reference = {}
 reverse = {}
@@ -143,6 +144,9 @@ def FetchRestaurantWeights(name, address) :
                     pass
     return c
         
+def UpdateRestaurantsCategory(uploads) :
+    for i in uploads :
+        result = collection.document(i["id"]).set(i)
 
 def FetchRestaurantCategory(name, address) :
     categories = None
@@ -181,8 +185,7 @@ def FetchRestaurantCategory(name, address) :
             if (i["name"] == name) :
                 categories = temp["categories"]
             upload.append(temp)
-        for i in upload :
-            result = collection.document(i["id"]).set(i)
+        threading.Thread(target=UpdateRestaurantsCategory, args=(upload,)).start()
     else :
         categories = result["categories"]
     return categories

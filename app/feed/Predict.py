@@ -4,6 +4,9 @@ import pickle
 import json
 import numpy as np
 from cuisine import CuisineRater, Configure
+from flask import current_app
+import requests
+import base64
 # from flask import current_app
 '''
 Final Return
@@ -15,6 +18,16 @@ Json:{
 	Need to edit CSV
 }
 '''
+
+def image(photo,key):
+	endpoint_url = "https://maps.googleapis.com/maps/api/place/photo?"
+	payload = {
+		'maxwidth': 300,
+		'photoreference': photo,
+		'key': key
+	}
+	r = requests.get(endpoint_url,params=payload)
+	return str(base64.b64encode(r.content))
 
 yelpkey = None
 
@@ -42,9 +55,6 @@ def vodoo(new_csv, uid):
 	unused_data = raw_data[raw_data["Chosen"] == 0.0]
 	
 	results.drop_duplicates(subset = "place_id", keep='last', inplace=True)
-	print("results:", results.shape)
-	print(results.head(10))
-	print(results.tail(10))
 
 	if(results.shape[0] < 20):
 		difference = 20 - results.shape[0]
@@ -58,8 +68,9 @@ def vodoo(new_csv, uid):
 	restaurants = json.loads(jayson)
 	interface = []
 	decisions = []
-
+	
 	for r in restaurants:
+		images = ""
 		addr = restaurants[r]["address"].split(",")
 		interface.append({
 			"name": restaurants[r]["name"],
@@ -69,6 +80,10 @@ def vodoo(new_csv, uid):
 			],
 			"place_id": restaurants[r]["place_id"]
 		})
+		if restaurants[r]["photo"] == "null" :
+			images = ""
+		else :
+			images = image(restaurants[r]["photo"][2:-2], current_app.config["GOOGLE_API_KEY"])
 		decisions.append({
 			"name": restaurants[r]["name"],
 			"distance": restaurants[r]["distance"],
@@ -77,17 +92,19 @@ def vodoo(new_csv, uid):
 			"rating": restaurants[r]["rating"],
 			"place_id": restaurants[r]["place_id"],
 			"price": restaurants[r]["price_level"],
-			"photo": restaurants[r]["photo"],
-			"score": 0
+			"photo": images[2:-1],
+			"score": 0,
+			"categories": [],
+			"time": restaurants[r]["time_spent"],
 		})
-
-	print("Starting Level 2")
+		
 	level2 = CuisineRater(uid, interface) # Level 2 ML
 
 	for d in level2 :
 		for d1 in decisions :
 			if d1["place_id"] == d[0] :
 				d1["score"] = d[1]
+				d1["categories"] = d[2]
 
 	return {"status" : 200, "decisions": decisions}
 '''
