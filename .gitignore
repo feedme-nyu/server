@@ -1,6 +1,8 @@
 *.pyc
 .DS_Store
 .env
-*.json
+/key.json
 venv
-*.csv
+/*.csv
+/.jpynb_checkpoints
+__pycache__
