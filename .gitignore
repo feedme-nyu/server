@@ -4,5 +4,6 @@
 /key.json
 venv
 /*.csv
-/.jpynb_checkpoints
+/.ipynb_checkpoints
 __pycache__
+\#*\#
