@@ -80,7 +80,7 @@ def vodoo(new_csv, uid):
 			],
 			"place_id": restaurants[r]["place_id"]
 		})
-		if restaurants[r]["photo"] == "null" :
+		if restaurants[r]["photo"] == "null" or restaurants[r]["photo"] == None:
 			images = ""
 		else :
 			images = image(restaurants[r]["photo"][2:-2], current_app.config["GOOGLE_API_KEY"])
