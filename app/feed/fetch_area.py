@@ -53,7 +53,7 @@ class GooglePlaces():
 		
 	def searchL(self, location, types):
 		endpoint_url = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?"
-		params = {'location': location,'types': types, 'radius' : "500" ,'key': self.apiKey}
+		params = {'location': location,'types': types, 'radius' : "500" ,'key': self.apiKey, 'opennow': ''}
 		places = [] #storing the places
 		data = requests.get(endpoint_url, params = params) #JSON request
 		results = json.loads(data.content) #load the data from Json
@@ -124,12 +124,11 @@ def write(locations): #write the csv
 						else:
 							goal = 0
 						#goal = place.popular[day]['data'][index]
-						writer.writerow({'place_id':place.place_id,'name':place.name,'rating_n':place.rating_n,
+						writer.writerow({'place_id':place.place_id,'name':place.name.encode('utf8'),'rating_n':place.rating_n,
 						 'opening_hours':place.opening_hours,'distance':place.distance,
 						'price_level':place.price_level,'rating':place.rating,
 						'frequency':place.frequency,'time_spent':time_spent,
-						'Went?':goal,'photo':place.photo,'address':place.address})
-	print("Done Writing")
+						'Went?':goal,'photo':place.photo,'address':place.address.encode('utf8')})
 	return write_file
 
 def CacheTimes (toBeCached):
@@ -156,12 +155,12 @@ def main(x,y,user_id):
 	
 	places = Search.searchL(coords,"restaurant")
 	fields = ['name', 'user_ratings_total', 'opening_hours', 'price_level', 'rating']
-	print(len(places))
+	print("Places", len(places))
 	for place in places:
 		# time.sleep(0.1)
 		details=None
 		try :
-			name = place['name'].encode('utf-8')
+			name = place['name']
 		except :
 			name = ""
 		try:
@@ -202,18 +201,19 @@ def main(x,y,user_id):
 		except KeyError :
 			opening_hours = 0
 		try:
-			address = place['formatted_address'].encode('utf-8')
+			address = place['formatted_address']
 		except KeyError:
 			try:
-				address = place['vicinity'].encode('utf-8')
+				address = place['vicinity']
 			except KeyError :
 				address = "Earth"
+		if address == "Earth" :
+			identifier = name.lower().encode('utf-8')
+		else :
+			identifier = (name.lower() + address.split(',')[0].lower()).encode("utf-8")
+		identifier = md5(identifier).hexdigest()
+		restaurantCache = GetCollection().document(identifier).get().to_dict()
 		try :
-			if address == "Earth" :
-				identifier = md5((name.lower()).encode('utf8')).hexdigest()
-			else :
-				identifier = md5((name.lower() + address.split(',')[0].lower()).encode('utf8')).hexdigest()
-			restaurantCache = GetCollection().document(identifier).get().to_dict()
 			frequency = restaurantCache["frequency"]
 		except :
 			frequency = 0 #need to update freq
@@ -221,7 +221,7 @@ def main(x,y,user_id):
 			# First try to get cached results:
 			details = restaurantCache["popularity"]
 			popular = details['populartimes']
-			time_spent = details['time_spent'].encode('utf-8')
+			time_spent = details['time_spent']
 		except:
 			# Otherwise, get it from the other source
 			details = get_id(api_key, place['place_id'])
@@ -231,7 +231,7 @@ def main(x,y,user_id):
 				except KeyError:
 					popular = [{'name': 'Monday', 'data': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 34, 56, 66, 58, 39, 24, 21, 29, 37, 33, 20, 0, 0]}, {'name': 'Tuesday', 'data': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 47, 81, 86, 59, 32, 26, 33, 43, 43, 33, 20, 0, 0]}, {'name': 'Wednesday', 'data': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 36, 68, 85, 74, 52, 43, 48, 52, 46, 32, 17, 0, 0]}, {'name': 'Thursday', 'data': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 43, 82, 100, 84, 61, 52, 47, 41, 40, 38, 29, 0, 0]}, {'name': 'Friday', 'data': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 38, 75, 98, 88, 61, 47, 55, 65, 60, 42, 21, 0, 0]}, {'name': 'Saturday', 'data': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 20, 32, 41, 44, 40, 32, 27, 30, 35, 32, 18, 0, 0]}, {'name': 'Sunday', 'data': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 11, 22, 33, 37, 37, 36, 34, 36, 41, 33, 14, 0, 0]}]
 				try:
-					time_spent = details['time_spent'].encode('utf-8')
+					time_spent = details['time_spent']
 				except KeyError:
 					time_spent = [15,15]
 				newCache.append({"id": identifier, "popularity": {"populartimes": popular, "time_spent": time_spent}})
@@ -243,6 +243,8 @@ def main(x,y,user_id):
 		locations.append(pdata)
 	
 	threading.Thread(target=CacheTimes, args=(newCache,)).start()
+	if (len(locations)) == 0:
+		return None
 	return write(locations)
 	
 

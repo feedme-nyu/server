@@ -53,13 +53,15 @@ def FEEDME():
     y = arguments['y']
     user_id = arguments['uid']
     
+    # new_csv = main(40.6942, -73.9866, user_id)
     new_csv = main(x,y,user_id)
-    print("Length: ", len(new_csv))
     # new_csv = "Alpha.csv"
     
+    if (new_csv is None) :
+        return jsonify({ "status": 201 }), 201
+
     jayson_file = vodoo(new_csv, user_id)
-    print("DONE")
-    return jsonify(jayson_file)
+    return jsonify(jayson_file), 200
       
 @bp.errorhandler(500)
 def server_error(e):
