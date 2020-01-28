@@ -53,7 +53,7 @@ class GooglePlaces():
 		
 	def searchL(self, location, types):
 		endpoint_url = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?"
-		params = {'location': location,'types': types, 'radius' : "500" ,'key': self.apiKey, 'opennow': ''}
+		params = {'location': location,'types': types, 'radius' : "1000" ,'key': self.apiKey, 'opennow': ''}
 		places = [] #storing the places
 		data = requests.get(endpoint_url, params = params) #JSON request
 		results = json.loads(data.content) #load the data from Json

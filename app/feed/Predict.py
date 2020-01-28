@@ -22,7 +22,7 @@ Json:{
 def image(photo,key):
 	endpoint_url = "https://maps.googleapis.com/maps/api/place/photo?"
 	payload = {
-		'maxwidth': 300,
+		'maxwidth': 400,
 		'photoreference': photo,
 		'key': key
 	}

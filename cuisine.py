@@ -203,9 +203,12 @@ def FetchRestaurantCategory(name, address) :
     return categories
         
 def FetchUserWeights (firebase_id) :
-    dbinfo = db.collection("user-trends").document(firebase_id).get().to_dict()
+    try:
+        dbinfo = db.collection("user-trends").document(firebase_id).get().to_dict()["history"]
+    except: 
+        dbinfo = db.collection("user-trends").document("teddy").get().to_dict()["history"]
     c = []
-    for i in dbinfo["history"] :
+    for i in dbinfo :
         if len(c) == 0 :
             c += graph[reference[i]]
         else :
