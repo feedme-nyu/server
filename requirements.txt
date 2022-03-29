@@ -35,7 +35,7 @@ joblib==0.14.0
 MarkupSafe==1.1.1
 msgpack==0.6.2
 pandas==0.25.3
-paramiko==2.6.0
+paramiko==2.10.1
 protobuf==3.10.0
 pyasn1==0.4.8
 pyasn1-modules==0.2.7
